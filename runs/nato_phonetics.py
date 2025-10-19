@@ -4,10 +4,14 @@ import time
 from colorama import Fore, Back, Style
 import configparser
 from pathlib import Path
+import os
 
 config = configparser.ConfigParser()
 config_path = Path(__file__).with_name("config.ini")
 config.read(str(config_path))
+
+program_output = " output was not saved correctly. Try again or report this bug"
+
 
 # Line available in config under nato_phonetics!
 speed = 150
@@ -20,11 +24,13 @@ if config.has_section("nato_phonetics"):
 engine = pyttsx3.init()
 engine.setProperty("rate", speed)
 
+
 def run_nato_phonetics():
     print(
         f"""{Fore.LIGHTBLACK_EX}\nNATO phonetic alphabet{Style.RESET_ALL}
 {Fore.CYAN}1: Sentence -> NATO phonetics (enter)
 2: Nato phonetics -> Sentence
+t: Test the whole alphabet 
 o: Options{Style.RESET_ALL}"""
     )
     chosen_mode = input(f"{Fore.LIGHTBLUE_EX}Choose operation mode:{Style.RESET_ALL}")
@@ -37,7 +43,6 @@ o: Options{Style.RESET_ALL}"""
             elif letter == ".":
                 completed_splitted_sentence.append("dot")
             else:
-                # Pass through unsupported symbols instead of crashing
                 completed_splitted_sentence.append(alphabet.get(letter.lower(), letter))
         return completed_splitted_sentence
 
@@ -47,10 +52,11 @@ o: Options{Style.RESET_ALL}"""
         mapped = split_sentence(sentence, nato_phonetic_alphabet)
 
         print(
-            f"{Fore.LIGHTGREEN_EX}NATO:",
+            f"{Fore.LIGHTGREEN_EX}\nNATO:",
             " ".join("space" if x == "|" else x for x in mapped),
             Style.RESET_ALL,
         )
+        program_output = " ".join("space" if x == "|" else x for x in mapped),
         for x in mapped:
             if x == "|":
                 engine.say("space")
@@ -82,7 +88,7 @@ o: Options{Style.RESET_ALL}"""
 
                 result_chars.append("[" + t + "]")
         sentence = "".join(result_chars)
-        print(f"{Fore.LIGHTGREEN_EX}Sentence:{Style.RESET_ALL}", sentence)
+        print(f"{Fore.LIGHTGREEN_EX}\nSentence:{Style.RESET_ALL}", sentence)
 
         if sentence:
             engine.say(sentence)
@@ -110,8 +116,47 @@ o: Options{Style.RESET_ALL}"""
             except Exception as e:
                 print(f"{Fore.RED}Failed to apply: {e}{Style.RESET_ALL}")
 
+    def ask_save_to_file():
+        ifsavetf = input(
+            f"{Fore.LIGHTBLUE_EX}Save output to file (y/N)?:{Style.RESET_ALL}"
+        )
+
+        if (
+            ifsavetf.lower() == "y"
+            or ifsavetf.lower() == "yes"
+            or ifsavetf.lower() == "1"
+            or ifsavetf.lower() == "yeah"
+            or ifsavetf.lower() == "yep"
+            or ifsavetf.lower() == "sure"
+        ):
+            file_name = input(
+                f"{Fore.LIGHTGREEN_EX}\nChoose a file name (default: to_NATO_output.txt):{Style.RESET_ALL}"
+            )
+            if file_name == "":
+                file_name = "to_NATO_output.txt"
+            try:
+                with open("./output/" + file_name, "w") as f:
+                    f.write(program_output)
+            except FileNotFoundError as e:
+                print(f"{Fore.RED}Failed to save: {e}{Style.RESET_ALL}")
+                print(
+                    f"{Fore.LIGHTBLACK_EX}Trying to create file/folder...{Style.RESET_ALL}"
+                )
+                try:
+                    os.makedirs("./output/")
+                    with open("./output/" + file_name, "w") as f:
+                        f.write(program_output)
+                        f.close()
+                except Exception as e:
+                    print(
+                        f"{Fore.RED}Failed to create file/folder: {e}{Style.RESET_ALL}"
+                    )
+            if os.path.exists("./output/" + file_name):
+                print(f"{Fore.LIGHTGREEN_EX}Saved!{Style.RESET_ALL}")
+
     if chosen_mode == "1":
         sentence_to_nato()
+        ask_save_to_file()
     elif chosen_mode == "2":
         nato_to_sentence()
     elif chosen_mode.lower() == "o":
