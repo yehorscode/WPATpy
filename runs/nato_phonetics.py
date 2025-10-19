@@ -1,17 +1,27 @@
 import pyttsx3
-from alphabet import nato_phonetic_alphabet
+import alphabet as alphamodule
 import time
 from colorama import Fore, Back, Style
 import configparser
 from pathlib import Path
 import os
+from rich.live import Live
+from rich.console import Console
+console = Console()
 
 config = configparser.ConfigParser()
 config_path = Path(__file__).with_name("config.ini")
 config.read(str(config_path))
 
-program_output = " output was not saved correctly. Try again or report this bug"
+program_output = "Program output was not saved correctly. Try again or report this bug"
 
+# Line available in config under nato_phonetics!
+alphabet = "nato_phonetic_alphabet"
+if config.has_section("nato_phonetics"):
+    try:
+        alphabet = config.get("nato_phonetics", "alphabet", fallback=alphabet)
+    except (ValueError, TypeError):
+        pass
 
 # Line available in config under nato_phonetics!
 speed = 150
@@ -35,7 +45,19 @@ o: Options{Style.RESET_ALL}"""
     )
     chosen_mode = input(f"{Fore.LIGHTBLUE_EX}Choose operation mode:{Style.RESET_ALL}")
 
-    def split_sentence(sentence, alphabet):
+    try:
+        active_alphabet = alphamodule.get_alphabet(alphabet)
+    except Exception:
+        active_alphabet = getattr(alphamodule, "nato_phonetic_alphabet")
+
+    try:
+        from typing import Dict
+
+        active_alphabet: Dict[str, str] = dict(active_alphabet)
+    except Exception:
+        pass
+
+    def split_sentence(sentence, alphabet_dict: dict):
         completed_splitted_sentence = []
         for letter in sentence:
             if letter == " ":
@@ -43,13 +65,13 @@ o: Options{Style.RESET_ALL}"""
             elif letter == ".":
                 completed_splitted_sentence.append("dot")
             else:
-                completed_splitted_sentence.append(alphabet.get(letter.lower(), letter))
+                completed_splitted_sentence.append(alphabet_dict.get(letter.lower(), letter))
         return completed_splitted_sentence
 
     def sentence_to_nato():
         sentence = input("Enter sentence: ")
 
-        mapped = split_sentence(sentence, nato_phonetic_alphabet)
+        mapped = split_sentence(sentence, active_alphabet)
 
         print(
             f"{Fore.LIGHTGREEN_EX}\nNATO:",
@@ -67,14 +89,14 @@ o: Options{Style.RESET_ALL}"""
                 engine.runAndWait()
 
     def nato_to_sentence():
-        for i in nato_phonetic_alphabet:
+        for i in active_alphabet:
             print(
-                Fore.LIGHTBLACK_EX, i, ":", nato_phonetic_alphabet[i], Style.RESET_ALL
+                Fore.LIGHTBLACK_EX, i, ":", active_alphabet[i], Style.RESET_ALL
             )
         print(Fore.LIGHTBLACK_EX, "To use spaces just type in `space`", Style.RESET_ALL)
         nato = input("Enter NATO phonetics (REMEMBER CORRECT SPELLING): ")
 
-        reverse = {v.lower(): k for k, v in nato_phonetic_alphabet.items()}
+        reverse = {v.lower(): k for k, v in active_alphabet.items()}
         tokens = [t.strip().lower() for t in nato.strip().split() if t.strip()]
         result_chars = []
         for t in tokens:
@@ -153,11 +175,31 @@ o: Options{Style.RESET_ALL}"""
                     )
             if os.path.exists("./output/" + file_name):
                 print(f"{Fore.LIGHTGREEN_EX}Saved!{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.LIGHTBLACK_EX}alr...{Style.RESET_ALL}")
+
+    def test_alphabet():
+        counter = 0
+        for i in active_alphabet:
+            with Live(console=console, refresh_per_second=10) as live:
+                try:
+                    live.update(f"[grey39]Saying:  {i} ({active_alphabet[i]})[/grey39]")
+                    time.sleep(0.25)
+                    live.update(f"[green]Correct: {i} ({active_alphabet[i]})[/green]")
+                    engine.say(active_alphabet[i])
+                    engine.runAndWait()
+                    counter += 1
+                except Exception as e:
+                    print(f"{Fore.RED}Failed to say: {e}{Style.RESET_ALL}")
+        if counter == len(active_alphabet):
+            print(f"{Fore.LIGHTGREEN_EX}\nCheck correctly passed!{Style.RESET_ALL}")
 
     if chosen_mode == "1":
         sentence_to_nato()
         ask_save_to_file()
     elif chosen_mode == "2":
         nato_to_sentence()
+    elif chosen_mode == "t":
+        test_alphabet()
     elif chosen_mode.lower() == "o":
         open_config()
