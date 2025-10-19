@@ -10,7 +10,7 @@ config_path = Path(__file__).with_name("config.ini")
 config.read(str(config_path))
 
 # Line available in config under nato_phonetics!
-speed = 150 
+speed = 150
 if config.has_section("nato_phonetics"):
     try:
         speed = config.getint("nato_phonetics", "speed", fallback=speed)
@@ -46,7 +46,11 @@ o: Options{Style.RESET_ALL}"""
 
         mapped = split_sentence(sentence, nato_phonetic_alphabet)
 
-        print("NATO:", " ".join("space" if x == "|" else x for x in mapped))
+        print(
+            f"{Fore.LIGHTGREEN_EX}NATO:",
+            " ".join("space" if x == "|" else x for x in mapped),
+            Style.RESET_ALL,
+        )
         for x in mapped:
             if x == "|":
                 engine.say("space")
@@ -57,7 +61,10 @@ o: Options{Style.RESET_ALL}"""
                 engine.runAndWait()
 
     def nato_to_sentence():
-        for i in nato_phonetic_alphabet: print(Fore.LIGHTBLACK_EX,i, ":", nato_phonetic_alphabet[i],Style.RESET_ALL)
+        for i in nato_phonetic_alphabet:
+            print(
+                Fore.LIGHTBLACK_EX, i, ":", nato_phonetic_alphabet[i], Style.RESET_ALL
+            )
         print(Fore.LIGHTBLACK_EX, "To use spaces just type in `space`", Style.RESET_ALL)
         nato = input("Enter NATO phonetics (REMEMBER CORRECT SPELLING): ")
 
@@ -75,15 +82,37 @@ o: Options{Style.RESET_ALL}"""
 
                 result_chars.append("[" + t + "]")
         sentence = "".join(result_chars)
-        print("Sentence:", sentence)
+        print(f"{Fore.LIGHTGREEN_EX}Sentence:{Style.RESET_ALL}", sentence)
 
         if sentence:
             engine.say(sentence)
             engine.runAndWait()
 
+    def open_config():
+        print(
+            f"{Fore.LIGHTBLACK_EX}\nConfigure NATO phonetic alphabet module{Style.RESET_ALL}"
+        )
+        print(f"""{Fore.CYAN}1: Change TTS speed (default 150){Style.RESET_ALL}""")
+        config_action = input(
+            f"{Fore.LIGHTBLUE_EX}Choose operation mode:{Style.RESET_ALL}"
+        )
 
+        if config_action == "1":
+            new_speed = input(f"{Fore.LIGHTGREEN_EX}Enter new speed:{Style.RESET_ALL}")
+            print(
+                f"{Fore.LIGHTBLACK_EX}Trying to apply... speed: {new_speed}{Style.RESET_ALL}"
+            )
+            try:
+                config.set("nato_phonetics", "speed", new_speed)
+                with open(str(config_path), "w") as configfile:
+                    config.write(configfile)
+                print(f"{Fore.LIGHTGREEN_EX}Applied!{Style.RESET_ALL}")
+            except Exception as e:
+                print(f"{Fore.RED}Failed to apply: {e}{Style.RESET_ALL}")
 
     if chosen_mode == "1":
         sentence_to_nato()
     elif chosen_mode == "2":
         nato_to_sentence()
+    elif chosen_mode.lower() == "o":
+        open_config()
