@@ -3,23 +3,8 @@ import time
 import configparser
 from pathlib import Path
 
-config = configparser.ConfigParser(inline_comment_prefixes=("#", ";"))
-config_path = Path(__file__).parent / "runs" / "config.ini"
-config.read(str(config_path))
 
-alphabet = config.get("nato_phonetics", "alphabet")
-
-# Runs (modules) imports
-from runs.nato_phonetics import run_nato_phonetics
-
-print(
-	f"""{Fore.GREEN}Welcome to the weird phonetic alphabets translator!{Style.RESET_ALL}
-{Fore.CYAN}1: NATO phonetic alphabet
-l: Load custom alphabet
-q/e/enter: Quit"""
-)
-
-def choose_alphabet():
+def choose_alphabet(config, config_path, alphabet):
     print(f"{Fore.LIGHTBLACK_EX}\nCurrect alphabet is: {alphabet}{Style.RESET_ALL}")
     asking = input(f"{Fore.LIGHTBLUE_EX}Do you wish to change it (y/N)?:{Style.RESET_ALL}")
     if (
@@ -47,12 +32,34 @@ def choose_alphabet():
         except Exception as e:
             print(f"{Fore.RED}Failed to apply: {e}{Style.RESET_ALL}")
 
-chosen_action = input(f"{Fore.LIGHTBLUE_EX}Choose operation mode:{Style.RESET_ALL}")
 
-if chosen_action.lower() == "1":
-    run_nato_phonetics()
-elif chosen_action == "q" or chosen_action == "e" or chosen_action == "":
-    print(f"{Fore.RED}Quitting..{Style.RESET_ALL}")
-    quit()
-elif chosen_action.lower() == "l":
-    choose_alphabet()
+def main():
+    config = configparser.ConfigParser(inline_comment_prefixes=("#", ";"))
+    config_path = Path(__file__).parent / "runs" / "config.ini"
+    config.read(str(config_path))
+
+    alphabet = config.get("nato_phonetics", "alphabet")
+
+    # Runs (modules) imports
+    from runs.nato_phonetics import run_nato_phonetics
+
+    print(
+        f"""{Fore.GREEN}Welcome to the weird phonetic alphabets translator!{Style.RESET_ALL}
+{Fore.CYAN}1: NATO phonetic alphabet
+l: Load custom alphabet
+q/e/enter: Quit"""
+    )
+
+    chosen_action = input(f"{Fore.LIGHTBLUE_EX}Choose operation mode:{Style.RESET_ALL}")
+
+    if chosen_action.lower() == "1":
+        run_nato_phonetics()
+    elif chosen_action == "q" or chosen_action == "e" or chosen_action == "":
+        print(f"{Fore.RED}Quitting..{Style.RESET_ALL}")
+        quit()
+    elif chosen_action.lower() == "l":
+        choose_alphabet(config, config_path, alphabet)
+
+
+if __name__ == "__main__":
+    main()

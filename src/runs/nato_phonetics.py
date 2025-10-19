@@ -78,7 +78,8 @@ o: Options{Style.RESET_ALL}"""
             " ".join("space" if x == "|" else x for x in mapped),
             Style.RESET_ALL,
         )
-        program_output = " ".join("space" if x == "|" else x for x in mapped),
+        global program_output
+        program_output = " ".join("space" if x == "|" else x for x in mapped)
         for x in mapped:
             if x == "|":
                 engine.say("space")
