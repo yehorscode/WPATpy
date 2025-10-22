@@ -1,6 +1,10 @@
 # WPATpy
 A translator for all your non needed needs
 
+Btw i made an error and instead of making the command wpatpy its whatpy :sob:
+Heres the demo:
+https://youtu.be/xNu3LO4hGOg
+
 Python
 
 What does this do?
